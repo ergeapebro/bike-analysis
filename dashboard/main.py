@@ -70,8 +70,7 @@ def create_rfm_df(df):
 
     return rfm_df, monthly_rfm, monthly_frequency
 
-url = "https://raw.githubusercontent.com/ergeapebro/bike-analysis/dashboard/dataa_df.csv"
-data_df = pd.read_csv(url)
+data_df = pd.read_csv(dataa.csv)
 
 counts_users = create_count_users(data_df)
 season_pattern = create_season_patern(data_df)
