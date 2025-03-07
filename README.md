@@ -1,4 +1,4 @@
-# Dicoding Collection Dashboard ✨
+# Bike Sharing Ergeape ✨
 
 ## Setup Environment - Anaconda
 ```
