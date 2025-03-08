@@ -89,7 +89,7 @@ st.sidebar.write("Anda memilih:", menu)
 # Menampilkan konten berdasarkan pilihan
 if menu == "Beranda":
     st.title("Dashboard Analisis Penyewaan Sepeda")
-    st.image("bike-rental.png")
+    st.image("dashboard/bike-rental.png")
     st.caption("Copyright (c) :blue[Ergeape] 2025 :sunglasses:")
 
 elif menu == "Pengguna":
