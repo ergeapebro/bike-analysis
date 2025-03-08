@@ -29,6 +29,9 @@ def create_weather_pattern(df):
         ["registered", "casual"]].sum().reset_index()
     return weather_pattern
 
+def create_year(df):
+    thn = df.groupby("yr")["cnt"].sum().reset_index()
+    return thn
 
 def create_month_pattern(df):
     df["mnth"] = pd.Categorical(df["mnth"], categories=["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -75,6 +78,7 @@ data_df = pd.read_csv("dashboard/dataa_df.csv")
 counts_users = create_count_users(data_df)
 season_pattern = create_season_patern(data_df)
 weather_pattern = create_weather_pattern(data_df)
+thn_tahun = create_year(data_df)
 monthly_pattern = create_month_pattern(data_df)
 weekday_pattern = create_weekday_pattern(data_df)
 workingday_pattern = create_workingday_pattern(data_df)
@@ -140,6 +144,9 @@ elif menu == "Musim & Cuaca":
 
 elif menu == "Riwayat Tahun":
     st.header("Jumlah penyewa sepeda dalam beberapa tahun")
+    st.write("Total Users")
+    st.write(f"Tahun {thn_tahun.iloc[0, 0]} = {thn_tahun.iloc[0, 1]:,}")
+    st.write(f"Tahun {thn_tahun.iloc[1, 0]} = {thn_tahun.iloc[1, 1]:,}")
     fig3 = plt.figure(figsize=(12, 6))
     sns.lineplot(data=monthly_pattern, x="mnth", y="cnt",
                  hue="yr", marker="o", palette="coolwarm")
