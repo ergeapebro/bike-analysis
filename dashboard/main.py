@@ -144,9 +144,6 @@ elif menu == "Musim & Cuaca":
 
 elif menu == "Riwayat Tahun":
     st.header("Jumlah penyewa sepeda dalam beberapa tahun")
-    st.write("Total Users")
-    st.write(f"Tahun {thn_tahun.iloc[0, 0]} = {thn_tahun.iloc[0, 1]:,}")
-    st.write(f"Tahun {thn_tahun.iloc[1, 0]} = {thn_tahun.iloc[1, 1]:,}")
     fig3 = plt.figure(figsize=(12, 6))
     sns.lineplot(data=monthly_pattern, x="mnth", y="cnt",
                  hue="yr", marker="o", palette="coolwarm")
@@ -156,6 +153,9 @@ elif menu == "Riwayat Tahun":
     plt.legend(title="Tahun")
     plt.grid(True)
     st.pyplot(fig3)
+    st.write("Total Users")
+    st.write(f"Tahun {thn_tahun.iloc[0, 0]} = {thn_tahun.iloc[0, 1]:,}")
+    st.write(f"Tahun {thn_tahun.iloc[1, 0]} = {thn_tahun.iloc[1, 1]:,}")
 
 elif menu == "Hari Kerja":
     st.header("Perbandingan antara hari kerja dan hari libur")
