@@ -70,7 +70,7 @@ def create_rfm_df(df):
 
     return rfm_df, monthly_rfm, monthly_frequency
 
-data_df = pd.read_csv(dataa.csv)
+data_df = pd.read_csv("dataa_df.csv")
 
 counts_users = create_count_users(data_df)
 season_pattern = create_season_patern(data_df)
