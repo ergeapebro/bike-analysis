@@ -7,7 +7,6 @@ sns.set(style='dark')
 
 
 def create_count_users(df):
-    # Create a new column 'count_users' in the dataframe
     total_registered = df["registered"].sum()
     total_casual = df["casual"].sum()
 
@@ -16,6 +15,7 @@ def create_count_users(df):
         "total_casual": total_casual,
         "counts_user": total_registered + total_casual
     }
+
 
 def create_season_patern(df):
     season_patern = df.groupby(
@@ -28,9 +28,6 @@ def create_weather_pattern(df):
         ["registered", "casual"]].sum().reset_index()
     return weather_pattern
 
-def create_year(df):
-    thn = df.groupby("yr")["cnt"].sum().reset_index()
-    return thn
 
 def create_month_pattern(df):
     df["mnth"] = pd.Categorical(df["mnth"], categories=["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -38,39 +35,42 @@ def create_month_pattern(df):
     monthly_trend = df.groupby(["yr", "mnth"])["cnt"].sum().reset_index()
     return monthly_trend
 
-def create_weekday_pattern(df):
-    weekday_pattern = df.groupby("weekday")[["cnt"]].sum().reindex(
-        ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'])
-    return weekday_pattern
 
 def create_workingday_pattern(df):
     workingday_pattern = df.groupby("workingday")[["cnt"]].sum()
     return workingday_pattern
 
-def create_rfm_df(df):
-    df["dteday"] = pd.to_datetime(df["dteday"])
-    latest_date = df["dteday"].max()
 
-    rfm_df = df.groupby(pd.Grouper(key="dteday", freq="M")).agg(
-        Recency=("dteday", lambda x: (latest_date - x.max()).days),
-        Frequency=("dteday", "count"),
-        Monetary=("cnt", "sum")
-    ).reset_index()
+def apply_binning(df, method):
+    df['dteday'] = pd.to_datetime(df['dteday'])
 
-    rfm_df['month'] = rfm_df['dteday'].dt.to_period('M')
-    monthly_rfm = rfm_df.groupby('month').agg(
-        Recency=('Recency', 'mean'),
-        Frequency=('Frequency', 'sum'),
-        Monetary=('Monetary', 'sum')
-    ).reset_index()
+    if method == "Kuantil":
+        df['Binning_Kuantil'] = pd.qcut(
+            df['cnt'], q=3, labels=['Rendah', 'Sedang', 'Tinggi'])
+        return df[['dteday', 'cnt', 'Binning_Kuantil']]
 
-    monthly_frequency = rfm_df.groupby(rfm_df['dteday'].dt.to_period("M"))[
-        'Frequency'].sum()
+    elif method == "Nilai Tetap":
+        max_cnt = df['cnt'].max()
+        # Pastikan bins bertambah secara monotonis
+        if max_cnt <= 4000:
+            # Hilangkan batas 4000 jika max_cnt terlalu kecil
+            bins = [0, 2000, max_cnt]
+            labels = ['Rendah', 'Sedang']
+        else:
+            bins = [0, 2000, 4000, max_cnt]
+            labels = ['Rendah', 'Sedang', 'Tinggi']
 
-    return rfm_df, monthly_rfm, monthly_frequency
+        df['Binning_Tetap'] = pd.cut(
+            df['cnt'], bins=bins, labels=labels, include_lowest=True)
+        return df[['dteday', 'cnt', 'Binning_Tetap']]
+
+    elif method == "Hari":
+        df['weekday'] = df['dteday'].dt.day_name()
+        weekday_pattern = df.groupby("weekday", as_index=False)['cnt'].sum()
+        return weekday_pattern
 
 
-data_df = pd.read_csv("dashboard/dataa_df.csv")
+data_df = pd.read_csv("dataa_df.csv")
 
 min_date = data_df["dteday"].min()
 max_date = data_df["dteday"].max()
@@ -92,20 +92,18 @@ counts_users = create_count_users(main_df)
 season_pattern = create_season_patern(main_df)
 weather_pattern = create_weather_pattern(main_df)
 monthly_pattern = create_month_pattern(main_df)
-weekday_pattern = create_weekday_pattern(main_df)
 workingday_pattern = create_workingday_pattern(main_df)
-rfm_df, monthly_rfm, monthly_frequency = create_rfm_df(main_df)
 
 
 # Membuat sidebar
 st.sidebar.title("Navigasi")
 menu = st.sidebar.selectbox(
-    "Halaman:", ["Beranda", "Pengguna", "Musim & Cuaca", "Riwayat Tahun", "Hari Kerja", "Analisis RFM"])
+    "Halaman:", ["Beranda", "Pengguna", "Musim & Cuaca", "Tren/bulan", "Hari Kerja", "Binning"])
 st.sidebar.write("Anda memilih:", menu)
 # Menampilkan konten berdasarkan pilihan
 if menu == "Beranda":
     st.title("Dashboard Analisis Penyewaan Sepeda")
-    st.image("dashboard/bike-rental.png")
+    st.image("bike-rental.png")
     st.caption("Copyright (c) :blue[Ergeape] 2025 :sunglasses:")
 
 elif menu == "Pengguna":
@@ -154,20 +152,16 @@ elif menu == "Musim & Cuaca":
     plt.legend()
     st.pyplot(fig3)
 
-elif menu == "Riwayat Tahun":
-    st.header("Jumlah penyewa sepeda dalam beberapa tahun")
+elif menu == "Tren/bulan":
+    st.header("Tren Peminjaman Sepeda per Bulan")
     fig3 = plt.figure(figsize=(12, 6))
     sns.lineplot(data=monthly_pattern, x="mnth", y="cnt",
                  hue="yr", marker="o", palette="coolwarm")
     plt.xlabel("Bulan")
     plt.ylabel("Jumlah Penyewa")
-    plt.title("Tren Peminjaman Sepeda per Bulan")
     plt.legend(title="Tahun")
     plt.grid(True)
     st.pyplot(fig3)
-    st.write("Total Users")
-    st.write(f"Tahun {thn_tahun.iloc[0, 0]} = {thn_tahun.iloc[0, 1]:,}")
-    st.write(f"Tahun {thn_tahun.iloc[1, 0]} = {thn_tahun.iloc[1, 1]:,}")
 
 elif menu == "Hari Kerja":
     st.header("Perbandingan antara hari kerja dan hari libur")
@@ -181,39 +175,30 @@ elif menu == "Hari Kerja":
     plt.ylabel("Jumlah penyewa")
     st.pyplot(fig4)
 
-elif menu == "Analisis RFM":
-    st.title("Analisis RFM")
-    st.subheader("Recency Trend")
-    fig1, ax1 = plt.subplots(figsize=(12, 6))
-    ax1.plot(monthly_rfm['month'].astype(str),
-             monthly_rfm['Recency'], marker='o', color='b', label='Recency')
-    ax1.set_xlabel("Month")
-    ax1.set_ylabel("Days Since Last Transaction")
-    ax1.legend()
-    ax1.tick_params(axis='x', rotation=45)
-    st.pyplot(fig1)
+elif menu == "Binning":
+    st.title("Analisis Binning")
+    binning_method = st.selectbox("Pilih variabel untuk binning", [
+                                  "Kuantil", "Nilai Tetap", "Hari"])
+    df_binned = apply_binning(main_df, binning_method)
+    figbin, ax = plt.subplots(figsize=(10, 5))
 
-    # Frequency Trend
-    st.subheader("Frequency per Bulan")
-    fig2, ax2 = plt.subplots(figsize=(12, 6))
-    ax2.bar(monthly_frequency.index.astype(str),
-            monthly_frequency.values, color='g', label='Frequency')
-    ax2.set_xlabel("Bulan")
-    ax2.set_ylabel("Total Transaksi")
-    ax2.legend()
-    ax2.tick_params(axis='x', rotation=45)
-    st.pyplot(fig2)
+    if binning_method == "Hari":
+        sns.barplot(data=df_binned, x="weekday",
+                    y="cnt", palette="coolwarm", ax=ax, order=["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"])
+        ax.set_xlabel("Hari")
+        ax.set_ylabel("Jumlah Penyewa")
+        ax.set_title("Distribusi Penyewaan Berdasarkan Hari")
+        plt.xticks(rotation=45)
 
-    # Monetary Trend
-    st.subheader("Monetary Trend")
-    fig3, ax3 = plt.subplots(figsize=(12, 6))
-    ax3.plot(monthly_rfm['month'].astype(str),
-             monthly_rfm['Monetary'], marker='o', color='r', label='Monetary')
-    ax3.set_xlabel("Month")
-    ax3.set_ylabel("Total Revenue")
-    ax3.legend()
-    ax3.tick_params(axis='x', rotation=45)
-    st.pyplot(fig3)
+    else:
+        sns.countplot(data=df_binned,
+                      x=df_binned.columns[-1], palette="coolwarm", ax=ax)
+        ax.set_xlabel("Kategori Binning")
+        ax.set_ylabel("Jumlah Penyewa")
+        ax.set_title(f"Distribusi {binning_method}")
+
+    st.pyplot(figbin)
+
 
 # Footer di sidebar
 st.sidebar.markdown("---")
