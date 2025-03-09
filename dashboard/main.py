@@ -179,6 +179,7 @@ elif menu == "Binning":
     st.title("Analisis Binning")
     binning_method = st.selectbox("Pilih variabel untuk binning", [
                                   "Kuantil", "Nilai Tetap", "Hari"])
+    st.write("Anda memilih:", binning_method)
     df_binned = apply_binning(main_df, binning_method)
     figbin, ax = plt.subplots(figsize=(10, 5))
 
