@@ -189,7 +189,6 @@ elif menu == "Binning":
         ax.set_ylabel("Jumlah Penyewa")
         ax.set_title("Distribusi Penyewaan Berdasarkan Hari")
         plt.xticks(rotation=45)
-
     else:
         sns.countplot(data=df_binned,
                       x=df_binned.columns[-1], palette="coolwarm", ax=ax)
