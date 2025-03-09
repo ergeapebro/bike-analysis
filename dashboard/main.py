@@ -70,7 +70,7 @@ def apply_binning(df, method):
         return weekday_pattern
 
 
-data_df = pd.read_csv("dataa_df.csv")
+data_df = pd.read_csv("dashboard/dataa_df.csv")
 
 min_date = data_df["dteday"].min()
 max_date = data_df["dteday"].max()
@@ -103,7 +103,7 @@ st.sidebar.write("Anda memilih:", menu)
 # Menampilkan konten berdasarkan pilihan
 if menu == "Beranda":
     st.title("Dashboard Analisis Penyewaan Sepeda")
-    st.image("bike-rental.png")
+    st.image("dashboard/bike-rental.png")
     st.caption("Copyright (c) :blue[Ergeape] 2025 :sunglasses:")
 
 elif menu == "Pengguna":
