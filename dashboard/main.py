@@ -17,7 +17,6 @@ def create_count_users(df):
         "counts_user": total_registered + total_casual
     }
 
-
 def create_season_patern(df):
     season_patern = df.groupby(
         "season")[["registered", "casual"]].sum().reset_index()
@@ -39,17 +38,14 @@ def create_month_pattern(df):
     monthly_trend = df.groupby(["yr", "mnth"])["cnt"].sum().reset_index()
     return monthly_trend
 
-
 def create_weekday_pattern(df):
     weekday_pattern = df.groupby("weekday")[["cnt"]].sum().reindex(
         ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'])
     return weekday_pattern
 
-
 def create_workingday_pattern(df):
     workingday_pattern = df.groupby("workingday")[["cnt"]].sum()
     return workingday_pattern
-
 
 def create_rfm_df(df):
     df["dteday"] = pd.to_datetime(df["dteday"])
@@ -73,16 +69,32 @@ def create_rfm_df(df):
 
     return rfm_df, monthly_rfm, monthly_frequency
 
+
 data_df = pd.read_csv("dashboard/dataa_df.csv")
 
-counts_users = create_count_users(data_df)
-season_pattern = create_season_patern(data_df)
-weather_pattern = create_weather_pattern(data_df)
-thn_tahun = create_year(data_df)
-monthly_pattern = create_month_pattern(data_df)
-weekday_pattern = create_weekday_pattern(data_df)
-workingday_pattern = create_workingday_pattern(data_df)
-rfm_df, monthly_rfm, monthly_frequency = create_rfm_df(data_df)
+min_date = data_df["dteday"].min()
+max_date = data_df["dteday"].max()
+
+with st.sidebar:
+
+    st.write("Pilih rentang tanggal untuk melihat data")
+    start_date, end_date = st.date_input(
+        label='Rentang Waktu', min_value=min_date,
+        max_value=max_date, value=[min_date, max_date]
+    )
+
+st.sidebar.markdown("---")
+
+main_df = data_df[(data_df["dteday"] >= str(start_date))
+                  & (data_df["dteday"] <= str(end_date))]
+
+counts_users = create_count_users(main_df)
+season_pattern = create_season_patern(main_df)
+weather_pattern = create_weather_pattern(main_df)
+monthly_pattern = create_month_pattern(main_df)
+weekday_pattern = create_weekday_pattern(main_df)
+workingday_pattern = create_workingday_pattern(main_df)
+rfm_df, monthly_rfm, monthly_frequency = create_rfm_df(main_df)
 
 
 # Membuat sidebar
@@ -202,19 +214,6 @@ elif menu == "Analisis RFM":
     ax3.legend()
     ax3.tick_params(axis='x', rotation=45)
     st.pyplot(fig3)
-
-st.sidebar.markdown("---")
-
-min_date = data_df["dteday"].min()
-max_date = data_df["dteday"].max()
-
-with st.sidebar:
-
-    st.write("Pilih rentang tanggal untuk melihat data")
-    start_date, end_date = st.date_input(
-        label='Rentang Waktu', min_value=min_date,
-        max_value=max_date, value=[min_date, max_date]
-    )
 
 # Footer di sidebar
 st.sidebar.markdown("---")
